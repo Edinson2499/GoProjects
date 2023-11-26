@@ -1,0 +1,177 @@
+package main
+
+import (
+	"container/list"
+	"fmt"
+	"os"
+	"time"
+)
+
+var totalGanancias = 0
+
+// Pedido representa un pedido en el restaurante
+type Pedido struct {
+	NombrePlato string
+	Cantidad    int
+	Prioridad   string
+	Precio      int
+}
+
+// Pila representa una pila de pedidos
+type Pila struct {
+	lista *list.List
+}
+
+// Cola representa una cola de pedidos
+type Cola struct {
+	lista *list.List
+}
+
+var pedidosDespachados []Pedido
+
+func main() {
+	opcion := 0
+	colaEspera := Cola{lista: list.New()}
+	pilaPreparacion := Pila{lista: list.New()}
+
+	for opcion != 9 {
+		fmt.Println("\033[33mRestaurante el arriero\033[0m - Gestion de Pedidos")
+		fmt.Println("     /\\")
+		fmt.Println("    /  \\")
+		fmt.Println("   /    \\")
+		fmt.Println("  /______\\")
+		fmt.Println("     ||")
+		fmt.Println("     ||")
+		fmt.Println()
+
+		fmt.Println("1. Agregar Pedido(Meseros)")
+		fmt.Println("2. Atender Pedidos(Cocineros)")
+		fmt.Println("3. Completar Pedido(Meseros)")
+		fmt.Println("4. Facturar pedidos(Cajeros)")
+		fmt.Println("5. Visualizar pedidos y Ganancias  (Administradores)")
+		fmt.Println("6. Cancelar algún pedido(Meseros)")
+		fmt.Println("7. Cambiar la prioridad de un pedido(Meseros)")
+		fmt.Println("8. Consultar facturas pasadas(Administradores)")
+		fmt.Println("9. Salir")
+
+		fmt.Print("Seleccione una opción: ")
+		fmt.Scan(&opcion)
+
+		switch opcion {
+		case 1:
+			fmt.Println("\033[34m*****************************\033[0m")
+			fmt.Println("\033[34mAgregar Pedido\033[0m")
+			var nombrePlato, prioridad string
+			var cantidad, precio int
+
+			fmt.Print("Nombre del plato: ")
+			fmt.Scan(&nombrePlato)
+
+			fmt.Print("Cantidad: ")
+			fmt.Scan(&cantidad)
+
+			fmt.Print("Prioridad (alta, media, baja): ")
+			fmt.Scan(&prioridad)
+
+			fmt.Print("Precio: ")
+			fmt.Scan(&precio)
+
+			nuevoPedido := Pedido{NombrePlato: nombrePlato, Cantidad: cantidad, Prioridad: prioridad, Precio: precio}
+			colaEspera.push(nuevoPedido)
+			fmt.Println("Pedido agregado correctamente")
+			fmt.Println("\033[34m*****************************\033[0m")
+
+		case 2:
+			fmt.Println("\033[31m******************************\033[0m")
+			fmt.Println("\033[31mAtender pedidos\033[0m")
+			fmt.Println("Sugerencia: Atienda primero los pedidos de prioridad alta.")
+
+			if !colaEspera.empty() {
+				colaEspera.imprimirPedidosPendientes()
+				fmt.Print("Seleccione un pedido para atender: ")
+				var opcionPedido int
+				fmt.Scan(&opcionPedido)
+
+				if opcionPedido > 0 && opcionPedido <= colaEspera.size() {
+					pedidoAtendido := colaEspera.front()
+					pilaPreparacion.push(pedidoAtendido)
+					fmt.Println("Pedido atendido:", pedidoAtendido.NombrePlato)
+
+					// Guardar el pedido atendido en la lista de pedidos despachados
+					pedidosDespachados = append(pedidosDespachados, pedidoAtendido)
+
+					colaEspera.pop()
+				} else {
+					fmt.Println("Opción no válida.")
+				}
+			} else {
+				fmt.Println("No hay pedidos en espera.")
+			}
+			fmt.Println("\033[31m******************************\033[0m")
+
+		// ... Resto de casos y funcionalidades ...
+
+		case 9:
+			// Salir
+			break
+
+		default:
+			fmt.Println("Opción no válida. Por favor, seleccione una opción válida.")
+		}
+
+	}
+}
+
+// Métodos de la estructura Cola
+func (c *Cola) push(pedido Pedido) {
+	c.lista.PushBack(pedido)
+}
+
+func (c *Cola) front() Pedido {
+	return c.lista.Front().Value.(Pedido)
+}
+
+func (c *Cola) pop() {
+	c.lista.Remove(c.lista.Front())
+}
+
+func (c *Cola) empty() bool {
+	return c.lista.Len() == 0
+}
+
+func (c *Cola) size() int {
+	return c.lista.Len()
+}
+
+func (c *Cola) imprimirPedidosPendientes() {
+	colaEsperaCopia := *c
+	numeroPedido := 1
+
+	if !colaEsperaCopia.empty() {
+		fmt.Println("Pedidos pendientes:")
+		for e := colaEsperaCopia.lista.Front(); e != nil; e = e.Next() {
+			pedido := e.Value.(Pedido)
+			fmt.Printf("Pedido #%d: %s, Prioridad: %s\n", numeroPedido, pedido.NombrePlato, pedido.Prioridad)
+			numeroPedido++
+		}
+	} else {
+		fmt.Println("No hay pedidos en espera.")
+	}
+}
+
+// Métodos de la estructura Pila
+func (p *Pila) push(pedido Pedido) {
+	p.lista.PushFront(pedido)
+}
+
+func (p *Pila) top() Pedido {
+	return p.lista.Front().Value.(Pedido)
+}
+
+func (p *Pila) pop() {
+	p.lista.Remove(p.lista.Front())
+}
+
+func (p *Pila) empty() bool {
+	return p.lista.Len() == 0
+}
